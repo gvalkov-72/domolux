@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void {
+        Schema::create('properties', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('city_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('district_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('location_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('property_type_id')->nullable()->constrained()->nullOnDelete();
+            $table->decimal('price', 10, 2)->nullable();
+            $table->unsignedInteger('bedrooms')->nullable();
+            $table->unsignedInteger('bathrooms')->nullable();
+            $table->unsignedInteger('area')->nullable(); // кв. м.
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void {
+        Schema::dropIfExists('properties');
+    }
+};
