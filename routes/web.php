@@ -18,83 +18,96 @@ use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\UploadController;
 
+/*
+|--------------------------------------------------------------------------
+| Фронтенд начална страница
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return view('frontend.EstateAgency.index');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth'])->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Админ зона
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () {
 
-    Route::get('/dashboard', function () {
+    // Табло
+    Route::get('/', function () {
         return view('admin.dashboard');
     })->name('dashboard');
 
-    Route::prefix('admin')->name('admin.')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Обща администрация (потребители, роли, права)
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('users', UserController::class);
+    Route::resource('roles', RoleController::class);
+    Route::resource('permissions', PermissionController::class);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Обща администрация (потребители, роли, права)
-        |--------------------------------------------------------------------------
-        */
-        Route::resource('users', UserController::class);
-        Route::resource('roles', RoleController::class);
-        Route::resource('permissions', PermissionController::class);
+    /*
+    |--------------------------------------------------------------------------
+    | Ресурси с многоезична поддръжка
+    |--------------------------------------------------------------------------
+    */
 
-        /*
-        |--------------------------------------------------------------------------
-        | Ресурси с многоезична поддръжка
-        |--------------------------------------------------------------------------
-        */
+    // Езици
+    Route::resource('languages', LanguageController::class);
+    Route::post('languages/sort', [LanguageController::class, 'sort'])->name('languages.sort');
+    Route::post('languages/move', [LanguageController::class, 'move'])->name('languages.move');
 
-        // Езици
-        Route::resource('languages', LanguageController::class);
-        Route::post('languages/sort', [LanguageController::class, 'sort'])->name('languages.sort');
-        Route::post('languages/move', [LanguageController::class, 'move'])->name('languages.move');
+    // Държави
+    Route::resource('countries', CountryController::class);
 
-        // Държави
-        Route::resource('countries', CountryController::class);
+    // Градове
+    Route::resource('cities', CityController::class);
 
-        // Градове
-        Route::resource('cities', CityController::class);
+    // Квартали
+    Route::resource('districts', DistrictController::class);
 
-        // Квартали
-        Route::resource('districts', DistrictController::class);
+    // Локации
+    Route::resource('locations', LocationController::class);
 
-        // Локации
-        Route::resource('locations', LocationController::class);
+    // Типове имоти
+    Route::resource('property_types', PropertyTypeController::class);
 
-        // Типове имоти
-        Route::resource('property_types', PropertyTypeController::class);
+    // Имоти
+    Route::resource('properties', PropertyController::class);
+    Route::get('/ajax/cities', [AjaxController::class, 'cities'])->name('ajax.cities');
+    Route::get('/ajax/districts', [AjaxController::class, 'districts'])->name('ajax.districts');
 
-        // Имоти
-        Route::resource('properties', PropertyController::class);
-        Route::get('/ajax/cities', [AjaxController::class, 'cities'])->name('ajax.cities');
-        Route::get('/ajax/districts', [AjaxController::class, 'districts'])->name('ajax.districts');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Галерия на имоти (Property Images)
-        |--------------------------------------------------------------------------
-        */
-        Route::resource('property_images', PropertyImageController::class)
+    /*
+    |--------------------------------------------------------------------------
+    | Галерия на имоти (Property Images)
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('property_images', PropertyImageController::class)
         ->parameters(['property_images' => 'property_image']);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Екстри и страници
-        |--------------------------------------------------------------------------
-        */
-        Route::resource('extras', ExtraController::class);
-        Route::resource('pages', PageController::class);
+    /*
+    |--------------------------------------------------------------------------
+    | Екстри и страници
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('extras', ExtraController::class);
+    Route::resource('pages', PageController::class);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Upload изображения
-        |--------------------------------------------------------------------------
-        */
-        Route::post('upload/image', [UploadController::class, 'uploadImage'])->name('upload.image');
-    });
+    /*
+    |--------------------------------------------------------------------------
+    | Upload изображения
+    |--------------------------------------------------------------------------
+    */
+    Route::post('upload/image', [UploadController::class, 'uploadImage'])->name('upload.image');
 });
