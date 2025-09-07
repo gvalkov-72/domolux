@@ -1,61 +1,44 @@
 @extends('adminlte::page')
 
-@section('title', __('pages.title'))
+@section('title', 'Страници')
 
 @section('content_header')
-    <h1>{{ __('pages.title') }}</h1>
-    <a href="{{ route('admin.pages.create') }}" class="btn btn-primary mb-3">{{ __('pages.create_new') }}</a>
+    <h1>Страници</h1>
 @stop
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <a href="{{ route('admin.pages.create') }}" class="btn btn-primary mb-3">Нова страница</a>
 
-    <table class="table table-bordered table-hover">
+    <table class="table table-bordered">
         <thead>
             <tr>
-                <th>{{ __('pages.slug') }}</th>
-                <th>{{ __('pages.is_active') }}</th>
-                <th>{{ __('pages.sort_order') }}</th>
-                <th>{{ __('pages.created_at') }}</th>
-                <th>{{ __('pages.updated_at') }}</th>
-                <th>{{ __('pages.actions') }}</th>
+                <th>ID</th>
+                <th>Slug</th>
+                <th>Заглавие</th>
+                <th>Активна</th>
+                <th>Подредба</th>
+                <th>Действия</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($pages as $page)
+            @foreach ($pages as $page)
                 <tr>
+                    <td>{{ $page->id }}</td>
                     <td>{{ $page->slug }}</td>
-                    <td>
-                        @if($page->is_active)
-                            <span class="badge badge-success">{{ __('pages.active') }}</span>
-                        @else
-                            <span class="badge badge-secondary">{{ __('pages.inactive') }}</span>
-                        @endif
-                    </td>
+                    <td>{{ $page->getTranslation('title', app()->getLocale()) }}</td>
+                    <td>{{ $page->is_active ? 'Да' : 'Не' }}</td>
                     <td>{{ $page->sort_order }}</td>
-                    <td>{{ $page->created_at->format('Y-m-d') }}</td>
-                    <td>{{ $page->updated_at->format('Y-m-d') }}</td>
                     <td>
-                        <a href="{{ route('admin.pages.edit', $page->id) }}" class="btn btn-sm btn-warning">{{ __('pages.edit') }}</a>
-
-                        <form action="{{ route('admin.pages.destroy', $page->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('{{ __('pages.confirm_delete') }}')">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger">{{ __('pages.delete') }}</button>
+                        <a href="{{ route('admin.pages.edit', $page) }}" class="btn btn-sm btn-warning">Редакция</a>
+                        <form action="{{ route('admin.pages.destroy', $page) }}" method="POST" style="display:inline;">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Изтриване?')">Изтриване</button>
                         </form>
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="6">{{ __('pages.no_records') }}</td>
-                </tr>
-            @endforelse
+            @endforeach
         </tbody>
     </table>
 
-    <div class="mt-3">
-        {{ $pages->links() }}
-    </div>
+    {{ $pages->links() }}
 @stop

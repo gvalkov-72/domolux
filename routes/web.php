@@ -17,15 +17,17 @@ use App\Http\Controllers\Admin\ExtraController;
 use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\UploadController;
+use App\Http\Controllers\Frontend\PageController as FrontendPageController;
+use App\Http\Controllers\Frontend\HomeController;
+use UniSharp\LaravelFilemanager\Lfm;
 
 /*
 |--------------------------------------------------------------------------
 | Фронтенд начална страница
 |--------------------------------------------------------------------------
 */
-Route::get('/', function () {
-    return view('frontend.EstateAgency.index');
-});
+
+Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
 
 /*
 |--------------------------------------------------------------------------
@@ -48,39 +50,21 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         return view('admin.dashboard');
     })->name('dashboard');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Обща администрация (потребители, роли, права)
-    |--------------------------------------------------------------------------
-    */
+    // Потребители, роли, права
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Ресурси с многоезична поддръжка
-    |--------------------------------------------------------------------------
-    */
 
     // Езици
     Route::resource('languages', LanguageController::class);
     Route::post('languages/sort', [LanguageController::class, 'sort'])->name('languages.sort');
     Route::post('languages/move', [LanguageController::class, 'move'])->name('languages.move');
 
-    // Държави
+    // Държави, градове, квартали, локации, типове имоти
     Route::resource('countries', CountryController::class);
-
-    // Градове
     Route::resource('cities', CityController::class);
-
-    // Квартали
     Route::resource('districts', DistrictController::class);
-
-    // Локации
     Route::resource('locations', LocationController::class);
-
-    // Типове имоти
     Route::resource('property_types', PropertyTypeController::class);
 
     // Имоти
@@ -88,26 +72,27 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     Route::get('/ajax/cities', [AjaxController::class, 'cities'])->name('ajax.cities');
     Route::get('/ajax/districts', [AjaxController::class, 'districts'])->name('ajax.districts');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Галерия на имоти (Property Images)
-    |--------------------------------------------------------------------------
-    */
+    // Галерия на имоти
     Route::resource('property_images', PropertyImageController::class)
         ->parameters(['property_images' => 'property_image']);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Екстри и страници
-    |--------------------------------------------------------------------------
-    */
+    // Екстри и страници
     Route::resource('extras', ExtraController::class);
     Route::resource('pages', PageController::class);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Upload изображения
-    |--------------------------------------------------------------------------
-    */
+    // Upload изображения
     Route::post('upload/image', [UploadController::class, 'uploadImage'])->name('upload.image');
+
+    Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
+        Lfm::routes();
+    });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Фронтенд динамични страници
+|--------------------------------------------------------------------------
+*/
+Route::get('/{slug}', [FrontendPageController::class, 'show'])
+    ->where('slug', '^[a-zA-Z0-9-_]+$') // защита срещу неподдържани символи
+    ->name('frontend.page.show');

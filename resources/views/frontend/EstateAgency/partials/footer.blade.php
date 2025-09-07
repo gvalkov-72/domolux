@@ -1,60 +1,61 @@
-<footer id="footer">
+<footer id="footer" class="footer light-background">
 
-  <div class="footer-top">
-    <div class="container">
-      <div class="row">
+  <div class="container">
+    <div class="row gy-3">
 
-        <div class="col-lg-3 col-md-6 footer-contact">
-          <h3>Домо Лукс</h3>
+      <div class="col-lg-3 col-md-6 d-flex">
+        <i class="bi bi-geo-alt icon"></i>
+        <div class="address">
+          <h4>Address</h4>
+          <p>A108 Adam Street</p>
+          <p>New York, NY 535022</p>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 d-flex">
+        <i class="bi bi-telephone icon"></i>
+        <div>
+          <h4>Contact</h4>
           <p>
-            София, България<br><br>
-            <strong>Телефон:</strong> +359 888 123 456<br>
-            <strong>Email:</strong> info@domolux.bg<br>
+            <strong>Phone:</strong> <span>+1 5589 55488 55</span><br>
+            <strong>Email:</strong> <span>info@example.com</span><br>
           </p>
         </div>
-
-        <div class="col-lg-3 col-md-6 footer-links">
-          <h4>Полезни линкове</h4>
-          <ul>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">Начало</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">За нас</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">Услуги</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">Имоти</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#">Контакт</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-3 col-md-6 footer-links">
-          <h4>Нашите услуги</h4>
-          <ul>
-            <li><i class="bx bx-chevron-right"></i> Консултации</li>
-            <li><i class="bx bx-chevron-right"></i> Продажби</li>
-            <li><i class="bx bx-chevron-right"></i> Наеми</li>
-            <li><i class="bx bx-chevron-right"></i> Инвестиции</li>
-            <li><i class="bx bx-chevron-right"></i> Оценки</li>
-          </ul>
-        </div>
-
-        <div class="col-lg-3 col-md-6 footer-links">
-          <h4>Социални мрежи</h4>
-          <div class="social-links mt-3">
-            <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
-            <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
-            <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
-            <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
-          </div>
-        </div>
-
       </div>
+
+      <div class="col-lg-3 col-md-6 d-flex">
+        <i class="bi bi-clock icon"></i>
+        <div>
+          <h4>Opening Hours</h4>
+          <p>
+            <strong>Mon-Sat:</strong> <span>11AM - 23PM</span><br>
+            <strong>Sunday:</strong> <span>Closed</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <h4>Follow Us</h4>
+        <div class="social-links d-flex">
+          <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <div class="container py-4">
-    <div class="copyright">
-      &copy; Copyright <strong><span>Домо Лукс</span></strong>. Всички права запазени
-    </div>
+  <div class="container copyright text-center mt-4">
+    <p>
+      © <span>{{ date('Y') }}</span>
+      <strong class="px-1 sitename">EstateAgency</strong>
+      <span>All Rights Reserved</span>
+    </p>
     <div class="credits">
-      Изградено с Laravel & AdminLTE
+      Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
     </div>
   </div>
+
 </footer>

@@ -13,7 +13,7 @@ class AdminMenuComposer
             // Админ панел
             [
                 'text' => __('languages.admin_panel_title'),
-                'route' => 'dashboard',
+                'route' => 'admin.dashboard',
                 'icon'  => 'fas fa-tachometer-alt',
             ],
 
