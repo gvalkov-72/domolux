@@ -25,7 +25,11 @@ class PageController extends Controller
      */
     public function create()
     {
-        $languages = Language::orderBy('position')->get();
+        // Взимаме само активните езици
+        $languages = Language::where('is_active', 1)
+            ->orderBy('position')
+            ->get();
+
         return view('admin.pages.create', compact('languages'));
     }
 
@@ -65,7 +69,11 @@ class PageController extends Controller
      */
     public function edit(Page $page)
     {
-        $languages = Language::orderBy('position')->get();
+        // Взимаме само активните езици
+        $languages = Language::where('is_active', 1)
+            ->orderBy('position')
+            ->get();
+
         return view('admin.pages.edit', compact('page', 'languages'));
     }
 
