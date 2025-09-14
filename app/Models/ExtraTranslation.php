@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperExtraTranslation
+ */
 class ExtraTranslation extends Model
 {
     public $timestamps = true;

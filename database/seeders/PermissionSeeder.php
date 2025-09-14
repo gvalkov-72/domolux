@@ -25,6 +25,8 @@ class PermissionSeeder extends Seeder
             'view-locations',
             'view-property_images',
             'view-pages',
+            'view-sections',
+            'view-section-items',
         ];
 
         foreach ($permissions as $permission) {

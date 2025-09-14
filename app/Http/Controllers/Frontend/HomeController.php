@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Page;
+use App\Models\Section;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $pages = Page::whereIn('slug', ['hero', 'services', 'agents', 'testimonials'])
-                     ->where('is_active', true)
-                     ->get()
-                     ->keyBy('slug');
+        $sections = Section::with(['items' => function ($q) {
+            $q->where('is_active', 1)->orderBy('position');
+        }])
+        ->where('is_active', 1)
+        ->orderBy('position')
+        ->get();
 
-        return view('frontend.EstateAgency.index', compact('pages'));
+        return view('frontend.EstateAgency.index', compact('sections'));
     }
 }

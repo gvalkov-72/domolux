@@ -1,70 +1,74 @@
+{{-- resources/views/admin/properties/index.blade.php --}}
 @extends('adminlte::page')
 
-@section('title', __('properties.title'))
+@section('title', __('Имотите'))
 
 @section('content_header')
-    <h1>{{ __('properties.title') }}</h1>
-    <a href="{{ route('admin.properties.create') }}" class="btn btn-primary">{{ __('properties.create') }}</a>
+    <h1>{{ __('Имотите') }}</h1>
 @stop
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title">{{ __('Списък с имоти') }}</h3>
+            <a href="{{ route('admin.properties.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> {{ __('Добави нов имот') }}
+            </a>
+        </div>
 
-    <table class="table table-bordered table-striped">
-        <thead>
-        <tr>
-            <th>#</th>
-            <th>{{ __('properties.code') }}</th>
-            <th>{{ __('properties.title_label') }}</th>
-            <th>{{ __('properties.price') }}</th>
-            <th>{{ __('properties.offer_type') }}</th>
-            <th>{{ __('properties.property_type') }}</th>
-            <th>{{ __('properties.city') }}</th>
-            <th>{{ __('properties.district') }}</th>
-            <th>{{ __('properties.location') }}</th>
-            <th>{{ __('properties.extras') }}</th>
-            <th>{{ __('properties.is_active') }}</th>
-            <th>{{ __('properties.actions') }}</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($properties as $property)
-            <tr>
-                <td>{{ $property->id }}</td>
-                <td>{{ $property->code }}</td>
-                <td>{{ $property->getTranslation('title', app()->getLocale()) }}</td>
-                <td>{{ number_format($property->price, 2, ',', ' ') }}</td>
-                <td>{{ $property->getTranslation('offer_type', app()->getLocale()) }}</td>
-                <td>{{ $property->propertyType->getTranslation('name', app()->getLocale()) }}</td>
-                <td>{{ $property->city->getTranslation('name', app()->getLocale()) }}</td>
-                <td>{{ optional($property->district)->getTranslation('name', app()->getLocale()) }}</td>
-                <td>{{ optional($property->location)->getTranslation('name', app()->getLocale()) }}</td>
-                <td>
-                    @foreach($property->extras as $extra)
-                        <span class="badge badge-info">{{ $extra->getTranslation('name', app()->getLocale()) }}</span>
-                    @endforeach
-                </td>
-                <td>
-                    @if($property->is_active)
-                        <span class="badge badge-success">{{ __('properties.active') }}</span>
-                    @else
-                        <span class="badge badge-danger">{{ __('properties.inactive') }}</span>
-                    @endif
-                </td>
-                <td>
-                    <a href="{{ route('admin.properties.edit', $property->id) }}" class="btn btn-warning btn-sm">{{ __('properties.edit') }}</a>
-                    <form action="{{ route('admin.properties.destroy', $property->id) }}" method="POST" style="display:inline-block" onsubmit="return confirm('{{ __('properties.confirm_delete') }}')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">{{ __('properties.delete') }}</button>
-                    </form>
-                </td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-
-    {{ $properties->links() }}
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>{{ __('Код') }}</th>
+                        <th>{{ __('Заглавие') }}</th>
+                        <th>{{ __('Тип имот') }}</th>
+                        <th>{{ __('Държава') }}</th>
+                        <th>{{ __('Град') }}</th>
+                        <th>{{ __('Цена (лв.)') }}</th>
+                        <th>{{ __('Активен') }}</th>
+                        <th>{{ __('Действия') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($properties as $property)
+                        <tr>
+                            <td>{{ $property->code }}</td>
+                            <td>{{ $property->translate(app()->getLocale())->title ?? '' }}</td>
+                            <td>{{ $property->propertyType?->translate(app()->getLocale())->name ?? '' }}</td>
+                            <td>{{ $property->country?->translate(app()->getLocale())->name ?? '' }}</td>
+                            <td>{{ $property->city?->translate(app()->getLocale())->name ?? '' }}</td>
+                            <td>{{ number_format($property->price_bgn, 2) }}</td>
+                            <td>
+                                @if($property->is_active)
+                                    <span class="badge badge-success">{{ __('Да') }}</span>
+                                @else
+                                    <span class="badge badge-danger">{{ __('Не') }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('admin.properties.edit', $property) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('admin.properties.destroy', $property) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('Сигурни ли сте?') }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                <a href="{{ route('admin.properties.show', $property) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-images"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center">{{ __('Няма добавени имоти') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 @stop

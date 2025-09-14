@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
+/**
+ * @mixin IdeHelperExtraProperty
+ */
 class ExtraProperty extends Pivot
 {
     protected $table = 'extra_property';

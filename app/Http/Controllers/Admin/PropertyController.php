@@ -10,18 +10,16 @@ use App\Models\City;
 use App\Models\District;
 use App\Models\Location;
 use App\Models\Extra;
-use App\Models\Language;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class PropertyController extends Controller
 {
     public function index()
     {
-        $properties = Property::with(['propertyType', 'city', 'district', 'location', 'extras'])
-            ->orderByDesc('id')
+        $properties = Property::with(['propertyTypes', 'countries', 'cities', 'districts', 'locations', 'extras', 'user'])
+            ->orderBy('position')
             ->paginate(20);
 
         return view('admin.properties.index', compact('properties'));
@@ -29,209 +27,109 @@ class PropertyController extends Controller
 
     public function create()
     {
-        $propertyTypes   = PropertyType::all();
-        $countries       = Country::all();
-        $cities          = City::all();
-        $districts       = District::all();
-        $locations       = Location::all();
-        $extras          = Extra::all();
-        $activeLanguages = Language::where('is_active', 1)->get();
+        $propertyTypes = PropertyType::all();
+        $countries     = Country::all();
+        $cities        = City::all();
+        $districts     = District::all();
+        $locations     = Location::all();
+        $extras        = Extra::all();
+
+        // Създаваме празен Property за формата
+        $property = new Property();
 
         return view('admin.properties.create', compact(
-            'propertyTypes','countries','cities','districts','locations','extras','activeLanguages'
+            'property', 'propertyTypes', 'countries', 'cities', 'districts', 'locations', 'extras'
         ));
     }
 
     public function store(Request $request)
     {
-        $normalizedIds = $this->normalizeIds($request);
+        DB::transaction(function () use ($request) {
+            $data = $request->only([
+                'code', 'position', 'price_bgn', 'price_eur',
+                'active_from', 'active_until'
+            ]);
 
-        $request->merge($normalizedIds);
-        $request->validate([
-            'code'             => 'required|unique:properties,code',
-            'price'            => 'required|numeric|min:0',
-            'property_type_id' => 'required|exists:property_types,id',
-            'country_id'       => 'required|exists:countries,id',
-            'city_id'          => 'required|exists:cities,id',
-            'district_id'      => 'nullable|exists:districts,id',
-            'location_id'      => 'nullable|exists:locations,id',
-            'area'             => 'nullable|numeric',
-            'rooms'            => 'nullable|numeric',
-            'floor'            => 'nullable|numeric',
-            'email'            => 'nullable|email',
-        ]);
+            $data['is_active'] = $request->boolean('is_active');
+            $data['user_id']   = Auth::id();
 
-        $data = [
-            'user_id'          => Auth::id(),
-            'code'             => strtoupper(\Illuminate\Support\Str::random(8)),
-            'price'            => $request->input('price'),
-            'property_type_id' => $request->input('property_type_id'),
-            'country_id'       => $request->input('country_id'),
-            'city_id'          => $request->input('city_id'),
-            'district_id'      => $request->input('district_id'),
-            'location_id'      => $request->input('location_id'),
-            'area'             => $request->input('area'),
-            'rooms'            => $request->input('rooms'),
-            'floor'            => $request->input('floor'),
-            'phone'            => $request->input('phone'),
-            'email'            => $request->input('email'),
-            'is_active'        => $request->boolean('is_active'),
-        ];
+            $property = Property::create($data);
 
-        if ($request->hasFile('cover_image')) {
-            $data['cover_image'] = $request->file('cover_image')->store('properties', 'public');
-        }
+            // преводи
+            foreach ($request->input('translations', []) as $locale => $fields) {
+                foreach ($fields as $field => $value) {
+                    $property->setTranslation($field, $locale, $value);
+                }
+            }
+            $property->save();
 
-        $property = Property::create($data);
-
-        $activeLangCodes = Language::where('is_active', 1)->pluck('code')->toArray();
-        foreach ($activeLangCodes as $lang) {
-            $property->setTranslation('title',       $lang, (string)$request->input("title.$lang", ''));
-            $property->setTranslation('description', $lang, (string)$request->input("description.$lang", ''));
-            $property->setTranslation('offer_type',  $lang, (string)$request->input("offer_type.$lang", ''));
-            $property->setTranslation('address',     $lang, (string)$request->input("address.$lang", ''));
-        }
-        $property->save();
-
-        $extrasIds = $this->flattenExtras($request->input('extras', []));
-        $property->extras()->sync($extrasIds);
+            // връзки
+            $property->propertyTypes()->sync($request->input('property_type_ids', []));
+            $property->countries()->sync($request->input('country_ids', []));
+            $property->cities()->sync($request->input('city_ids', []));
+            $property->districts()->sync($request->input('district_ids', []));
+            $property->locations()->sync($request->input('location_ids', []));
+            $property->extras()->sync($request->input('extra_ids', []));
+        });
 
         return redirect()->route('admin.properties.index')
-            ->with('success', __('properties.created'));
+            ->with('success', __('messages.created_successfully'));
     }
 
     public function edit(Property $property)
     {
-        $property->load(['extras', 'propertyType', 'city', 'district', 'location']);
+        $propertyTypes = PropertyType::all();
+        $countries     = Country::all();
+        $cities        = City::all();
+        $districts     = District::all();
+        $locations     = Location::all();
+        $extras        = Extra::all();
 
-        $propertyTypes   = PropertyType::all();
-        $countries       = Country::all();
-        $cities          = City::all();
-        $districts       = District::all();
-        $locations       = Location::all();
-        $extras          = Extra::all();
-        $activeLanguages = Language::where('is_active', 1)->get();
+        $property->load(['propertyTypes', 'countries', 'cities', 'districts', 'locations', 'extras', 'images']);
 
         return view('admin.properties.edit', compact(
-            'property','propertyTypes','countries','cities','districts','locations','extras','activeLanguages'
+            'property', 'propertyTypes', 'countries', 'cities', 'districts', 'locations', 'extras'
         ));
     }
 
     public function update(Request $request, Property $property)
     {
-        $normalizedIds = $this->normalizeIds($request);
+        DB::transaction(function () use ($request, $property) {
+            $data = $request->only([
+                'code', 'position', 'price_bgn', 'price_eur',
+                'active_from', 'active_until'
+            ]);
 
-        $request->merge($normalizedIds);
-        $request->validate([
-            'code'             => ['required', Rule::unique('properties','code')->ignore($property->id)],
-            'price'            => 'required|numeric|min:0',
-            'property_type_id' => 'required|exists:property_types,id',
-            'country_id'       => 'required|exists:countries,id',
-            'city_id'          => 'required|exists:cities,id',
-            'district_id'      => 'nullable|exists:districts,id',
-            'location_id'      => 'nullable|exists:locations,id',
-            'area'             => 'nullable|numeric',
-            'rooms'            => 'nullable|numeric',
-            'floor'            => 'nullable|numeric',
-            'email'            => 'nullable|email',
-        ]);
+            $data['is_active'] = $request->boolean('is_active');
 
-        $data = [
-            'user_id'          => Auth::id(),
-            'code'             => $request->input('code'),
-            'price'            => $request->input('price'),
-            'property_type_id' => $request->input('property_type_id'),
-            'country_id'       => $request->input('country_id'),
-            'city_id'          => $request->input('city_id'),
-            'district_id'      => $request->input('district_id'),
-            'location_id'      => $request->input('location_id'),
-            'area'             => $request->input('area'),
-            'rooms'            => $request->input('rooms'),
-            'floor'            => $request->input('floor'),
-            'phone'            => $request->input('phone'),
-            'email'            => $request->input('email'),
-            'is_active'        => $request->boolean('is_active'),
-        ];
+            $property->update($data);
 
-        if ($request->hasFile('cover_image')) {
-            if ($property->cover_image && Storage::disk('public')->exists($property->cover_image)) {
-                Storage::disk('public')->delete($property->cover_image);
+            // преводи
+            foreach ($request->input('translations', []) as $locale => $fields) {
+                foreach ($fields as $field => $value) {
+                    $property->setTranslation($field, $locale, $value);
+                }
             }
-            $data['cover_image'] = $request->file('cover_image')->store('properties', 'public');
-        }
+            $property->save();
 
-        $property->update($data);
-
-        $activeLangCodes = Language::where('is_active', 1)->pluck('code')->toArray();
-        foreach ($activeLangCodes as $lang) {
-            $property->setTranslation('title',       $lang, (string)$request->input("title.$lang", ''));
-            $property->setTranslation('description', $lang, (string)$request->input("description.$lang", ''));
-            $property->setTranslation('offer_type',  $lang, (string)$request->input("offer_type.$lang", ''));
-            $property->setTranslation('address',     $lang, (string)$request->input("address.$lang", ''));
-        }
-        $property->save();
-
-        $extrasIds = $this->flattenExtras($request->input('extras', []));
-        $property->extras()->sync($extrasIds);
+            // връзки
+            $property->propertyTypes()->sync($request->input('property_type_ids', []));
+            $property->countries()->sync($request->input('country_ids', []));
+            $property->cities()->sync($request->input('city_ids', []));
+            $property->districts()->sync($request->input('district_ids', []));
+            $property->locations()->sync($request->input('location_ids', []));
+            $property->extras()->sync($request->input('extra_ids', []));
+        });
 
         return redirect()->route('admin.properties.index')
-            ->with('success', __('properties.updated'));
+            ->with('success', __('messages.updated_successfully'));
     }
 
     public function destroy(Property $property)
     {
-        if ($property->cover_image && Storage::disk('public')->exists($property->cover_image)) {
-            Storage::disk('public')->delete($property->cover_image);
-        }
-
-        $property->extras()->detach();
         $property->delete();
 
         return redirect()->route('admin.properties.index')
-            ->with('success', __('properties.deleted'));
-    }
-
-    private function pickFirstId($value)
-    {
-        if (is_array($value)) {
-            foreach ($value as $v) {
-                if ($v !== null && $v !== '') {
-                    return $v;
-                }
-            }
-            return null;
-        }
-        return $value;
-    }
-
-    private function normalizeIds(Request $request): array
-    {
-        return [
-            'property_type_id' => $this->pickFirstId($request->input('property_type_id')),
-            'country_id'       => $this->pickFirstId($request->input('country_id')),
-            'city_id'          => $this->pickFirstId($request->input('city_id')),
-            'district_id'      => $this->pickFirstId($request->input('district_id')),
-            'location_id'      => $this->pickFirstId($request->input('location_id')),
-        ];
-    }
-
-    private function flattenExtras($extrasByLang): array
-    {
-        if (!is_array($extrasByLang)) {
-            return [];
-        }
-
-        $ids = [];
-        foreach ($extrasByLang as $arr) {
-            if (is_array($arr)) {
-                foreach ($arr as $id) {
-                    if ($id !== null && $id !== '') {
-                        $ids[] = (int) $id;
-                    }
-                }
-            }
-        }
-
-        return array_values(array_unique($ids));
+            ->with('success', __('messages.deleted_successfully'));
     }
 }

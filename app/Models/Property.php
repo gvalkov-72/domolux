@@ -2,64 +2,67 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasTranslations;
 
+/**
+ * @mixin IdeHelperProperty
+ */
 class Property extends Model
 {
-    use HasFactory, HasTranslations;
+    use HasTranslations;
 
     protected $fillable = [
-        'property_type_id',
-        'country_id',
-        'city_id',
-        'district_id',
-        'location_id',
+        'code',
+        'position',
+        'price_bgn',
+        'price_eur',
         'user_id',
-        'address',
-        'phone',
-        'email',
-        'price',
-        'area',
-        'floor',
-        'rooms',
-        'cover_image',
         'is_active',
-        'offer_type',   // ✅ добавено поле
+        'active_from',
+        'active_until',
     ];
 
-    // Преводими полета
-    protected array $translatable = [
-        'name',
+    // преводими полета
+    public array $translatable = [
+        'title',
         'description',
-        'offer_type', // ✅ вече е включено
     ];
 
-    // Връзки
-    public function propertyType()
+    // връзки
+    public function propertyTypes()
     {
-        return $this->belongsTo(PropertyType::class);
+        return $this->belongsToMany(PropertyType::class, 'property_property_type');
     }
 
-    public function country()
+    public function countries()
     {
-        return $this->belongsTo(Country::class);
+        return $this->belongsToMany(Country::class, 'country_property');
     }
 
-    public function city()
+    public function cities()
     {
-        return $this->belongsTo(City::class);
+        return $this->belongsToMany(City::class, 'city_property');
     }
 
-    public function district()
+    public function districts()
     {
-        return $this->belongsTo(District::class);
+        return $this->belongsToMany(District::class, 'district_property');
     }
 
-    public function location()
+    public function locations()
     {
-        return $this->belongsTo(Location::class);
+        return $this->belongsToMany(Location::class, 'location_property');
+    }
+
+    public function extras()
+    {
+        return $this->belongsToMany(Extra::class, 'property_extra');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(PropertyImage::class);
     }
 
     public function user()
@@ -67,13 +70,9 @@ class Property extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function extras()
+    // помощно: вземане на cover image
+    public function coverImage()
     {
-        return $this->belongsToMany(Extra::class, 'extra_property');
-    }
-
-    public function images()
-    {
-        return $this->hasMany(PropertyImage::class);
+        return $this->images()->where('is_cover', true)->first();
     }
 }

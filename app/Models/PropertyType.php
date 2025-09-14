@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Traits\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperPropertyType
+ */
 class PropertyType extends Model
 {
     use HasTranslations;

@@ -16,7 +16,11 @@ $app = Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append([
+            // Админ език
             \App\Http\Middleware\SetAdminLanguage::class,
+
+            // Фронтенд език
+            \App\Http\Middleware\SetSiteLanguage::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

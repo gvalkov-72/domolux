@@ -2,25 +2,30 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasTranslations;
+use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin IdeHelperPropertyImage
+ */
 class PropertyImage extends Model
 {
-    use HasFactory, HasTranslations;
-
     protected $fillable = [
         'property_id',
-        'image_path',
-        'is_active',
-        'sort_order',
+        'path',
+        'disk',
+        'position',
+        'is_cover',
     ];
-
-    public array $translatable = ['description'];
 
     public function property()
     {
         return $this->belongsTo(Property::class);
+    }
+
+    // достъп до пълния URL
+    public function getUrlAttribute(): string
+    {
+        return Storage::disk($this->disk)->url($this->path);
     }
 }

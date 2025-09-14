@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Traits\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperLocation
+ */
 class Location extends Model
 {
     use HasTranslations;

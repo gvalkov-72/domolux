@@ -2,7 +2,11 @@
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
         <a href="{{ route('frontend.home') }}" class="logo d-flex align-items-center">
-            <h1 class="sitename">Домо <span>Лукс</span></h1>
+            <img src="{{ asset('frontend/EstateAgency/assets/img/logo_broker_w_bg.jpg') }}" 
+                 alt="Домо Лукс" 
+                 class="img-fluid me-2" 
+                 style="max-height: 70px;">
+            <h6 class="sitename m-0">Луксат е там където е дома</h6>
         </a>
 
         <nav id="navmenu" class="navmenu">
@@ -35,6 +39,32 @@
                         {{ __('Контакт') }}
                     </a>
                 </li>
+
+                {{-- Language Switcher --}}
+                @php
+                    $languages = \App\Models\Language::active()->orderBy('position')->get();
+                    $currentLocale = app()->getLocale();
+                @endphp
+                @if($languages->count() > 1)
+                    <li class="dropdown">
+                        <a href="#">
+                            🌐 {{ strtoupper($currentLocale) }} <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <ul>
+                            @foreach($languages as $lang)
+                                <li>
+                                    <a href="{{ route('frontend.language.switch', $lang->code) }}">
+                                        @if($lang->code === $currentLocale)
+                                            ✓ <strong>{{ $lang->name }}</strong>
+                                        @else
+                                            {{ $lang->name }}
+                                        @endif
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
             </ul>
 
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

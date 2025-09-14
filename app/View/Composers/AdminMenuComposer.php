@@ -76,7 +76,7 @@ class AdminMenuComposer
                 'icon'  => 'fas fa-home',
                 'can'   => 'view-properties',
             ],
-            
+
             [
                 'text' => __('property_types.title'),
                 'route' => 'admin.property_types.index',
@@ -95,12 +95,21 @@ class AdminMenuComposer
                 'icon'  => 'fas fa-file-alt',
                 'can'   => 'view-pages',
             ],
+
             [
-                'text' => __('property_images.title'),
-                'route' => 'admin.property_images.index',
-                'icon'  => 'fas fa-images',
-                'can'   => 'view-property_images',
+                'text' => __('sections.sections'),
+                'route' => 'admin.sections.index',
+                'icon' => 'fas fa-th-large',
+                'can' => 'view-sections',
             ],
+
+            [
+                'text' => __('sections.section_items'),
+                'route' => 'admin.section_items.index',
+                'icon' => 'fas fa-th-list',
+                'can' => 'view-section-items',
+            ],
+
         ]);
     }
 }

@@ -24,8 +24,8 @@ class DatabaseSeeder extends Seeder
             LocationsTableSeeder::class,
             PropertyTypesTableSeeder::class,
             ExtrasTableSeeder::class,
-            ExtraPropertyTableSeeder::class,
             PageSeeder::class,
+            SectionsSeeder::class,
 
         ]);
 

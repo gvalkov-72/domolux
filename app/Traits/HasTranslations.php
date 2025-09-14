@@ -37,11 +37,11 @@ trait HasTranslations
     /**
      * Създаване/актуализиране на превод
      */
-    public function setTranslation(string $key, string $locale, string $value): void
+    public function setTranslation(string $key, string $locale, ?string $value): void
     {
         $this->translations()->updateOrCreate(
             ['key' => $key, 'locale' => $locale],
-            ['value' => $value]
+            ['value' => $value ?? '']
         );
     }
 
@@ -62,7 +62,7 @@ trait HasTranslations
             if (!is_array($fields)) continue;
 
             foreach ($fields as $key => $value) {
-                if (is_null($value) || $value === '') continue;
+                // 👉 тук вече не прескачаме null/празно, а го пазим като ''
                 $this->setTranslation($key, $locale, $value);
             }
         }

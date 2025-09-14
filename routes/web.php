@@ -19,21 +19,17 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
 use UniSharp\LaravelFilemanager\Lfm;
 
-/*
-|--------------------------------------------------------------------------
-| Фронтенд начална страница
-|--------------------------------------------------------------------------
-*/
 
-Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
 
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes
 |--------------------------------------------------------------------------
 */
+
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
@@ -69,12 +65,11 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
 
     // Имоти
     Route::resource('properties', PropertyController::class);
-    Route::get('/ajax/cities', [AjaxController::class, 'cities'])->name('ajax.cities');
-    Route::get('/ajax/districts', [AjaxController::class, 'districts'])->name('ajax.districts');
 
-    // Галерия на имоти
-    Route::resource('property_images', PropertyImageController::class)
-        ->parameters(['property_images' => 'property_image']);
+    // Снимки към имоти (nested resource)
+    Route::resource('properties.images', PropertyImageController::class);
+
+
 
     // Екстри и страници
     Route::resource('extras', ExtraController::class);
@@ -83,6 +78,12 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     // Upload изображения
     Route::post('upload/image', [UploadController::class, 'uploadImage'])->name('upload.image');
 
+    // Секции
+    Route::resource('sections', \App\Http\Controllers\Admin\SectionController::class);
+
+    // Елементи на секция
+    Route::resource('section_items', \App\Http\Controllers\Admin\SectionItemController::class);
+
     Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web', 'auth']], function () {
         Lfm::routes();
     });
@@ -90,9 +91,26 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
 
 /*
 |--------------------------------------------------------------------------
-| Фронтенд динамични страници
+| Фронтенд начална страница
 |--------------------------------------------------------------------------
 */
-Route::get('/{slug}', [FrontendPageController::class, 'show'])
-    ->where('slug', '^[a-zA-Z0-9-_]+$') // защита срещу неподдържани символи
-    ->name('frontend.page.show');
+Route::middleware(['web', \App\Http\Middleware\SetSiteLanguage::class])->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Фронтенд смяна на език
+    |--------------------------------------------------------------------------
+    */
+    Route::get('lang/{code}', [FrontendLanguageController::class, 'switch'])
+        ->name('frontend.language.switch');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Фронтенд динамични страници
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/{slug}', [FrontendPageController::class, 'show'])
+        ->where('slug', '^[a-zA-Z0-9-_]+$')
+        ->name('frontend.page.show');
+});

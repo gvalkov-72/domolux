@@ -6,6 +6,9 @@ use App\Traits\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @mixin IdeHelperCity
+ */
 class City extends Model
 {
     use HasTranslations;

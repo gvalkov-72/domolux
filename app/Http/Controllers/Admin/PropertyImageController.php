@@ -3,111 +3,96 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\PropertyImage;
 use App\Models\Property;
-use App\Models\Language;
+use App\Models\PropertyImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PropertyImageController extends Controller
 {
-    public function index()
+    /**
+     * Списък със снимките за даден имот
+     */
+    public function index(Property $property)
     {
-        $images = PropertyImage::with('property')->paginate(15);
-        $activeLanguages = Language::where('is_active', true)->pluck('code')->toArray();
-        return view('admin.property_images.index', compact('images', 'activeLanguages'));
+        $images = $property->images()->orderBy('position')->get();
+
+        return view('admin.property_images.index', compact('property', 'images'));
     }
 
-    public function create()
+    /**
+     * Форма за качване на нови снимки
+     */
+    public function create(Property $property)
     {
-        $properties = Property::all();
-        $activeLanguages = Language::where('is_active', true)->pluck('code')->toArray();
-        return view('admin.property_images.create', compact('properties', 'activeLanguages'));
+        return view('admin.property_images.create', compact('property'));
     }
 
-    public function store(Request $request)
+    /**
+     * Запазване на качени снимки
+     */
+    public function store(Request $request, Property $property)
     {
-        $activeLanguages = Language::where('is_active', true)->pluck('code')->toArray();
-
-        $rules = [
-            'property_id' => ['required', 'exists:properties,id'],
-            'image' => ['required', 'image', 'max:5120'],
-        ];
-
-        foreach ($activeLanguages as $code) {
-            $rules["description.$code"] = ['nullable', 'string'];
-        }
-
-        $validated = $request->validate($rules);
-
-        $imagePath = $request->file('image')->store('property_images', 'public');
-
-        $image = new PropertyImage();
-        $image->property_id = $validated['property_id'];
-        $image->image_path = $imagePath;
-
-        foreach ($activeLanguages as $code) {
-            $image->setTranslation('description', $code, $request->input("description.$code", ''));
-        }
-
-        $image->save();
-
-        return redirect()->route('admin.property_images.index')->with('success', 'Снимката беше добавена успешно.');
-    }
-
-    public function edit(PropertyImage $propertyImage)
-    {
-        $properties = Property::all();
-        $activeLanguages = Language::where('is_active', true)->pluck('code')->toArray();
-
-        return view('admin.property_images.edit', [
-            'image' => $propertyImage,
-            'properties' => $properties,
-            'activeLanguages' => $activeLanguages,
+        $request->validate([
+            'images.*' => 'required|image|max:5120', // до 5MB на файл
         ]);
+
+        foreach ($request->file('images', []) as $index => $file) {
+            $path = $file->store('properties/' . $property->id, 'public');
+
+            $property->images()->create([
+                'path' => $path,
+                'disk' => 'public',
+                'position' => $property->images()->count() + 1,
+                'is_cover' => false,
+            ]);
+        }
+
+        return redirect()->route('admin.properties.images.index', $property)
+            ->with('success', __('messages.images_uploaded_success'));
     }
 
-    public function update(Request $request, PropertyImage $propertyImage)
+    /**
+     * Редактиране (примерно само cover / позиция)
+     */
+    public function edit(Property $property, PropertyImage $image)
     {
-        $activeLanguages = Language::where('is_active', true)->pluck('code')->toArray();
-
-        $rules = [
-            'property_id' => ['required', 'exists:properties,id'],
-            'image' => ['nullable', 'image', 'max:5120'],
-        ];
-
-        foreach ($activeLanguages as $code) {
-            $rules["description.$code"] = ['nullable', 'string'];
-        }
-
-        $validated = $request->validate($rules);
-
-        if ($request->hasFile('image')) {
-            if ($propertyImage->image_path) {
-                Storage::disk('public')->delete($propertyImage->image_path);
-            }
-            $imagePath = $request->file('image')->store('property_images', 'public');
-            $propertyImage->image_path = $imagePath;
-        }
-
-        $propertyImage->property_id = $validated['property_id'];
-
-        foreach ($activeLanguages as $code) {
-            $propertyImage->setTranslation('description', $code, $request->input("description.$code", ''));
-        }
-
-        $propertyImage->save();
-
-        return redirect()->route('admin.property_images.index')->with('success', 'Снимката беше обновена успешно.');
+        return view('admin.property_images.edit', compact('property', 'image'));
     }
 
-    public function destroy(PropertyImage $propertyImage)
+    /**
+     * Обновяване (cover/позиция)
+     */
+    public function update(Request $request, Property $property, PropertyImage $image)
     {
-        if ($propertyImage->image_path) {
-            Storage::disk('public')->delete($propertyImage->image_path);
-        }
-        $propertyImage->delete();
+        $request->validate([
+            'is_cover' => 'nullable|boolean',
+            'position' => 'nullable|integer',
+        ]);
 
-        return redirect()->route('admin.property_images.index')->with('success', 'Снимката беше изтрита успешно.');
+        if ($request->boolean('is_cover')) {
+            // зануляваме другите cover
+            $property->images()->update(['is_cover' => false]);
+        }
+
+        $image->update([
+            'is_cover' => $request->boolean('is_cover'),
+            'position' => $request->input('position', $image->position),
+        ]);
+
+        return redirect()->route('admin.properties.images.index', $property)
+            ->with('success', __('messages.image_updated_success'));
+    }
+
+    /**
+     * Изтриване
+     */
+    public function destroy(Property $property, PropertyImage $image)
+    {
+        Storage::disk($image->disk)->delete($image->path);
+        $image->delete();
+
+        return redirect()->route('admin.properties.images.index', $property)
+            ->with('success', __('messages.image_deleted_success'));
     }
 }

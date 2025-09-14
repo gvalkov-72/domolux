@@ -12,14 +12,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         // Създаване на администратора
-        $admin = User::firstOrCreate(
-            ['email' => 'gvalkov72@gmail.com'],
-            [
-                'name' => 'Георги Георгиев',
-                'password' => Hash::make('123456789'),
-                'email_verified_at' => now(),
-            ]
-        );
+        $admin = 
 
         // Вземаме или създаваме ролята "admin"
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
